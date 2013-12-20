@@ -1,0 +1,148 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project name="symfony-presta" default="build">
+
+    <property environment="env"/>
+    <property name="releasedir" value="${env.JENKINS_HOME}/releases/${env.BUILD_TAG}_${branch}"/>
+
+    <target name="build" depends="prepare,phpcs-ci,lint,phpunit,phploc,pdepend,phpmd-ci,phpcpd,phpdox,phpcb" />
+
+    <target name="clean" description="Cleanup build artifacts">
+        <delete dir="${basedir}/build/" />
+        <exec executable="rm" failonerror="false">
+            <arg line="composer.phar" />
+        </exec>
+        <exec executable="make" failonerror="false">
+            <arg value="test-clean"/>
+        </exec>
+        <delete file="${basedir}/app/config/parameters.yml" failonerror="false" />
+    </target>
+
+    <target name="prepare" depends="clean" description="Prepare for build">
+        <mkdir dir="${basedir}/build/"/>
+        <mkdir dir="${basedir}/build/junit"/>
+        <mkdir dir="${basedir}/build/api"/>
+        <mkdir dir="${basedir}/build/logs/"/>
+        <mkdir dir="${basedir}/build/pdepend/"/>
+        <mkdir dir="${basedir}/build/coverage/"/>
+        <mkdir dir="${basedir}/build/phpdox"/>
+        <copy file="${basedir}/app/config/parameters.yml.dist" tofile="${basedir}/app/config/parameters.yml"/>
+        <exec executable="wget" failonerror="true">
+            <arg line="http://getcomposer.org/composer.phar" description="Download Composer"/>
+        </exec>
+        <exec executable="php" failonerror="true" description="Run Install for Composer">
+            <arg line="composer.phar install --no-dev"/>
+        </exec>
+        <exec executable="make" failonerror="true" description="Install project in test env">
+            <arg value="test-install" />
+        </exec>
+        <exec executable="php" failonerror="true" description="Run cache:clear in test environment">
+            <arg line="app/console cache:clear --env=test" />
+        </exec>
+    </target>
+
+    <target name="lint" description="Perform syntax check of sourcecode files">
+        <apply executable="php" failonerror="true">
+            <arg value="-l" />
+            <fileset dir="${basedir}/src/">
+                <include name="**/*.php" />
+                <modified />
+            </fileset>
+        </apply>
+    </target>
+
+    <target name="phpunit" description="Run unit tests with PHPUnit">
+        <exec executable="${basedir}/bin/phpunit" failonerror="true">
+            <arg line="-c ${basedir}/app/
+                 --coverage-html ${basedir}/build/coverage
+                 --log-junit ${basedir}/build/junit/phpunit.xml
+                 --coverage-clover ${basedir}/build/logs/clover.xml" />
+        </exec>
+    </target>
+
+    <target name="behat" description="Validates features">
+        <exec executable="bin/behat" failonerror="true">
+            <arg value="--format=junit" />
+            <arg value="--out=${basedir}/build/junit" />
+        </exec>
+    </target>
+
+    <target name="phploc" description="Measure project size using PHPLOC">
+        <exec executable="phploc" failonerror="false">
+            <arg value="--log-csv" />
+            <arg value="${basedir}/build/logs/phploc.csv" />
+            <arg path="${basedir}/src" />
+        </exec>
+    </target>
+
+    <target name="pdepend" description="Calculate software metrics using PHP_Depend">
+        <exec executable="pdepend" failonerror="false">
+            <arg value="--jdepend-xml=${basedir}/build/logs/jdepend.xml" />
+            <arg value="--jdepend-chart=${basedir}/build/pdepend/dependencies.svg" />
+            <arg value="--overview-pyramid=${basedir}/build/pdepend/overview-pyramid.svg" />
+            <arg path="${basedir}/src" />
+        </exec>
+    </target>
+
+    <target name="phpmd-ci" description="Perform project mess detection using PHPMD creating a log file for the continuous integration server">
+        <exec executable="phpmd" failonerror="false">
+            <arg path="${basedir}/src" />
+            <arg value="xml" />
+            <arg value="codesize,design,naming,unusedcode" />
+            <arg value="--reportfile" />
+            <arg value="${basedir}/build/logs/pmd.xml" />
+        </exec>
+    </target>
+
+    <target name="phpcs-ci" description="Find coding standard violations using PHP_CodeSniffer creating a log file for the continuous integration server">
+        <exec executable="phpcs" failonerror="false">
+            <arg value="-p" />
+            <arg value="-n" />
+            <arg value="--extensions=php" />
+            <arg value="--report=checkstyle" />
+            <arg value="--report-file=${basedir}/build/logs/checkstyle.xml" />
+            <arg value="--standard=PSR2" />
+            <arg path="${basedir}/src" />
+        </exec>
+    </target>
+
+    <target name="phpcpd" description="Find duplicate code using PHPCPD">
+        <exec executable="phpcpd" failonerror="false">
+            <arg value="--log-pmd" />
+            <arg value="${basedir}/build/logs/pmd-cpd.xml" />
+            <arg path="${basedir}/src" />
+        </exec>
+    </target>
+
+    <target name="phpdox" description="Generate API documentation using phpDox">
+        <exec executable="phpdox" failonerror="false">
+            <arg path="-f ${basedir}/phpdox.xml" />
+        </exec>
+    </target>
+
+    <target name="phpcb" description="Aggregate tool output with PHP_CodeBrowser">
+        <exec executable="${basedir}/bin/phpcb" failonerror="false">
+            <arg value="--log" />
+            <arg path="${basedir}/build/logs" />
+            <arg value="--source" />
+            <arg path="${basedir}/src" />
+            <arg value="--output" />
+            <arg path="${basedir}/build/code-browser" />
+        </exec>
+    </target>
+
+    <target name="release" description="Generate new release">
+        <mkdir dir="${releasedir}"/>
+        <exec executable="make" failonerror="true" description="Install project in test env">
+            <arg value="deploy-configure" />
+        </exec>
+        <exec executable="rsync" failonerror="true" description="Copy files to release preserving attributes">
+            <arg value="-a" />
+            <arg line="--exclude build" />
+            <arg line="--exclude app/config/parameters.yml" />
+            <arg line="--exclude app/cache/*" />
+            <arg line="--exclude app/logs/*" />
+            <arg line="${basedir}/ ${releasedir}/" />
+        </exec>
+    </target>
+
+</project>
