@@ -4,7 +4,7 @@
     <property environment="env"/>
     <property name="releasedir" value="${env.JENKINS_HOME}/releases/${env.BUILD_TAG}_${branch}"/>
 
-    <target name="build" depends="prepare,phpcs-ci,lint,phpunit,phploc,pdepend,phpmd-ci,phpcpd,phpdox,phpcb" />
+    <target name="build" depends="prepare,phpcs-ci,lint,phpunit,phpmd-ci,phpcpd" />
 
     <target name="clean" description="Cleanup build artifacts">
         <delete dir="${basedir}/build/" />
