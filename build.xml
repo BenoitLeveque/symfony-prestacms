@@ -30,7 +30,7 @@
             <arg line="http://getcomposer.org/composer.phar" description="Download Composer"/>
         </exec>
         <exec executable="php" failonerror="true" description="Run Install for Composer">
-            <arg line="composer.phar install --no-dev --no-interaction"/>
+            <arg line="composer.phar install --dev --no-interaction"/>
         </exec>
         <exec executable="make" failonerror="true" description="Install project in test env">
             <arg value="test-install" />
