@@ -11,9 +11,6 @@
         <exec executable="rm" failonerror="false">
             <arg line="composer.phar" />
         </exec>
-        <exec executable="make" failonerror="false">
-            <arg value="test-clean"/>
-        </exec>
         <delete file="${basedir}/app/config/parameters.yml" failonerror="false" />
     </target>
 
@@ -31,6 +28,9 @@
         </exec>
         <exec executable="php" failonerror="true" description="Run Install for Composer">
             <arg line="composer.phar install --dev --no-interaction"/>
+        </exec>
+        <exec executable="make" failonerror="false">
+            <arg value="test-clean"/>
         </exec>
         <exec executable="make" failonerror="true" description="Install project in test env">
             <arg value="test-install" />
