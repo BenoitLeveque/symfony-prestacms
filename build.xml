@@ -128,7 +128,7 @@
             <arg line=" --exclude app/config/parameters.yml" />
             <arg line=" --exclude app/cache/*" />
             <arg line=" --exclude app/logs/*" />
-            <arg line=" -f ${basedir}/build/${env.GIT_COMMIT}.tar.gz ${basedir}/" />
+            <arg line=" -f ${basedir}/build/${env.GIT_COMMIT}.tar.gz ." />
         </exec>
     </target>
 
