@@ -111,4 +111,25 @@
         </exec>
     </target>
 
+    <target name="build-release" description="Generate a new release file">
+        <mkdir dir="${releasedir}"/>
+        <exec executable="wget" failonerror="true" description="Download Composer">
+            <arg line="http://getcomposer.org/composer.phar" />
+        </exec>
+
+        <exec executable="php" failonerror="true" description="Remove dev dependencies and generate optimize autoload file">
+            <arg line="composer.phar install --no-dev --verbose --prefer-dist --optimize-autoloader --no-progress"/>
+        </exec>
+
+        <exec executable="tar" failonerror="true">
+            <arg value="-czf" />
+            <arg line="--exclude build" />
+            <arg line="--exclude .git" />
+            <arg line="--exclude app/config/parameters.yml" />
+            <arg line="--exclude app/cache/*" />
+            <arg line="--exclude app/logs/*" />
+            <arg line="${env.JENKINS_HOME}/releases/${env.BUILD_TAG}_${branch}_${env.GIT_COMMIT}.tar.gz ${basedir}/" />
+        </exec>
+    </target>
+
 </project>
