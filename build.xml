@@ -112,7 +112,7 @@
     </target>
 
     <target name="build-release" description="Generate a new release file">
-        <mkdir dir="${releasedir}"/>
+        <mkdir dir="${env.JENKINS_HOME}/releases/"/>
         <exec executable="wget" failonerror="true" description="Download Composer">
             <arg line="http://getcomposer.org/composer.phar" />
         </exec>
@@ -122,13 +122,13 @@
         </exec>
 
         <exec executable="tar" failonerror="true">
-            <arg value="-czf" />
-            <arg line="--exclude build" />
-            <arg line="--exclude .git" />
-            <arg line="--exclude app/config/parameters.yml" />
-            <arg line="--exclude app/cache/*" />
-            <arg line="--exclude app/logs/*" />
-            <arg line="${env.JENKINS_HOME}/releases/${env.BUILD_TAG}_${branch}_${env.GIT_COMMIT}.tar.gz ${basedir}/" />
+            <arg value="-cz" />
+            <arg line=" --exclude build" />
+            <arg line=" --exclude .git" />
+            <arg line=" --exclude app/config/parameters.yml" />
+            <arg line=" --exclude app/cache/*" />
+            <arg line=" --exclude app/logs/*" />
+            <arg line=" -f ${basedir}/build/${env.GIT_COMMIT}.tar.gz ${basedir}/" />
         </exec>
     </target>
 
